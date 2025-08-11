@@ -1,3 +1,7 @@
+from fastapi import FastAPI
+
+app = FastAPI()
+
 @app.get("/")
-def home():
-    return {"message": "Hello from CI/CD!"}
+def read_root():
+    return {"message": "CI/CD FastAPI demo running!"}
