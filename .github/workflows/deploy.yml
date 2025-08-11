@@ -3,7 +3,7 @@ name: Deploy FastAPI App
 on:
   push:
     branches:
-      - main  # Runs when you push to the main branch
+      - main
 
 jobs:
   deploy:
@@ -24,9 +24,26 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        run: |
-          pytest
+        run: pytest
 
-      # Example: Deploy to Render, Railway, or your server
-      - name: Deploy to server
-        run: echo "Deploy step goes here"
+      - name: Copy files via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "."
+          target: "~/fastapi-app"
+
+      - name: Restart FastAPI app on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/fastapi-app
+            pip install -r requirements.txt
+            sudo systemctl restart fastapi-app  # Or your process manager (e.g. restart gunicorn, uvicorn, docker, etc)
